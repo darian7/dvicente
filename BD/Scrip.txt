@@ -1,0 +1,384 @@
+creacion de usuarios:
+
+administrador: 
+
+create user administrador@localhost identified by 'admin';
+grant all privileges on dvicente.* to administrador@localhost;
+grant create user on *.* to administrador@localhost;
+grant process, trigger, grant option on *.* to administrador@localhost;
+grant reload, create routine on *.* to administrador@localhost;
+
+gerente: 
+
+create user gerente@localhost identified by 'geren';
+grant select, insert, update on dvicente.provedores to gerente@localhost;
+grant select, insert, update on dvicente.telefonos to gerente@localhost;
+grant select, insert, update on dvicente.ventas to gerente@localhost;
+grant select, insert, update on dvicente.productos to gerente@localhost;
+grant select, insert, update on dvicente.contenidos to gerente@localhost;
+grant select, insert, update on dvicente.pedidos to gerente@localhost;
+grant select, insert, update on dvicente.comandantes to gerente@localhost;
+grant select, insert, update on dvicente.comanda to gerente@localhost;
+
+
+jefebodega: 
+
+create user jefebodega@localhost identified by 'trabaja24';
+grant select on dvicente.productos to jefebodega@localhost;
+grant select on dvicente.pedidos to jefebodega@localhost;
+grant select on dvicente.contenidos to jefebodega@localhost;
+
+
+cliente: 
+
+create user cliente@localhost identified by 'clien';
+grant select on dvicente.productos to cliente@localhost;
+
+flush privileges;
+
+entrar con usuarios:
+ruta:
+C:\Program Files\MySQL\MySQL Server 5.7\bin>
+mysql.exe -u administrador -p
+
+
+create database dvicente;
+use dvicente;
+
+create table provedores (
+primer_nombre_representante varchar(40) not null,
+segundo_nombre_representante varchar(40),
+primer_apellido_representante varchar(40) not null,
+segundo_apellido_representante varchar(40),
+nit_empresa int not null,
+nombre_empresa varchar(40)
+);
+
+create table telefonos (
+telefono int,
+fk_nit int,
+id_telefono int
+);
+
+create table ventas (
+id_venta int not null,
+fk_producto int not null,
+fk_provedor int not null,
+dia int,
+mes int,
+año int,
+cantidad_kilos int,
+precio_kilos int
+);
+
+create table productos (
+id_producto int not null,
+nombre_producto varchar(40),
+precio_kilo int,
+cantidad int,
+estado_producto varchar(10) check (estado_producto in ('disponible','agotado'))
+);
+
+create table contenidos (
+id_contenido int not null,
+fk_producto int not null,
+fk_pedido int not null,
+cantidad_kilos int,
+precio_cantidad int,
+estado_contenido varchar(1)
+);
+
+create table pedidos (
+id_pedido int not null,
+fk_comanda_comandante int,
+fk_comanda_id int,
+fk_comanda_batallon int,
+dia int,
+mes int,
+año int,
+total_pedido int,
+estado_pedido varchar (20)
+);
+
+create table comanda (
+id_comanda int not null,
+fk_comandante int not null,
+fk_batallon int not null,
+fecha_que_comando date
+);
+
+create table comandantes (
+cedula int not null,
+primer_nombre_comandante varchar(40) not null,
+segundo_nombre_comandante varchar(40),
+primer_apellido_comandante varchar(40) not null,
+segundo_apellido_comandante varchar(40),
+cargo_ejercito varchar(40),
+telefono int
+);
+
+create table batallones (
+id_batallon int not null,
+nombre_batallon varchar(40),
+fk_brigada int
+);
+
+create table brigadas (
+id_brigada int not null,
+nombre_brigada varchar(40),
+ubicacion_brigada varchar(40),
+fk_division int
+);
+
+create table divisiones (
+id_division int not null,
+nombre_division varchar(50),
+fk_ejercito int
+);
+
+create table ejercito (
+nit_ejercito int not null,
+nombre_ejercito varchar(40)
+);
+
+create table auditoria (
+fk_tipoaccion int,
+nombre_table varchar(20),
+usuario varchar (40),
+fecha_accion date,
+hora time,
+id_auditoria int
+);
+
+create table tipoaccion (
+id_tipoaccion int,
+nombre_accion varchar(40)
+);
+
+create table respaldo_producto (
+fecha date,
+usuario varchar(40),
+precio_viejo int,
+precio_nuevo int,
+nombre_producto_aletrado varchar(40),
+id_respaldo int
+);
+
+create table empleado (
+cedula_empleado int,
+primer_nombre varchar(40),
+segundo_nombre varchar(40),
+primer_apellido varchar(40),
+segundo_apellido varchar(40),
+cargo varchar(40),
+salario int
+);
+
+alter table provedores add constraint pk_provedores primary key (nit_empresa);
+alter table ventas add constraint pk_ventas_compuesta primary key (id_venta,fk_producto,fk_provedor);
+alter table productos add constraint pk_productos primary key (id_producto);
+alter table contenidos add constraint pk_contenidos_compuesta primary key (id_contenido,fk_producto,fk_pedido);
+alter table pedidos add constraint pk_pedidos primary key (id_pedido);
+alter table comandantes add constraint pk_comandantes primary key (cedula);
+alter table batallones add constraint pk_batallones primary key (id_batallon);
+alter table brigadas add constraint pk_brigadas primary key (id_brigada);
+alter table divisiones add constraint pk_divisiones primary key (id_division);
+alter table ejercito add constraint pk_ejercito primary key (nit_ejercito);
+alter table tipoaccion add constraint pk_tipoaccion primary key (id_tipoaccion);
+alter table comanda add constraint pk_comanda_compuesta primary key (id_comanda,fk_comandante,fk_batallon);
+alter table telefonos add constraint pk_telefono primary key (id_telefono);
+alter table auditoria add constraint pk_auditoria primary key (id_auditoria);
+alter table respaldo_producto add constraint pk_respaldo primary key (id_respaldo);
+
+alter table telefonos add constraint fk_provedores_telefonos foreign key (fk_nit) references provedores(nit_empresa);
+alter table ventas add constraint fk_producto_ventas foreign key (fk_producto) references productos(id_producto);
+alter table ventas add constraint fk_provedor_ventas foreign key (fk_provedor) references provedores(nit_empresa);
+alter table contenidos add constraint fk_producto_contenidos foreign key (fk_producto) references productos(id_producto);
+alter table pedidos add constraint fk_comanda_comandante foreign key (fk_comanda_comandante) references comanda(fk_comandante);
+alter table pedidos add constraint fk_comanda_id foreign key (fk_comanda_id) references comanda(id_comanda);
+alter table pedidos add constraint fk_comanda_batallon foreign key (fk_comanda_batallon) references comanda(fk_batallon);
+alter table pedidos add constraint fk_comanda_compuesta foreign key (fk_comanda_id,fk_comanda_comandante,fk_comanda_batallon) references comanda(id_comanda,fk_comandante,fk_batallon);
+
+
+alter table comanda add constraint fk_comandante_comanda foreign key (fk_comandante) references comandantes(cedula);
+alter table comanda add constraint fk_batallon_comanda foreign key (fk_batallon) references batallones(id_batallon);
+alter table batallones add constraint fk_brigada_batallones foreign key (fk_brigada) references brigadas(id_brigada);
+alter table brigadas add constraint fk_division_brigadas foreign key (fk_division) references divisiones(id_division);
+alter table divisiones add constraint fk_ejercito_divisiones foreign key (fk_ejercito) references ejercito(nit_ejercito);
+alter table auditoria add constraint fk_tipoaccion_auditoria foreign key (fk_tipoaccion) references tipoaccion(id_tipoaccion);
+
+
+creacion de triggers:
+
+delimiter $$
+create trigger ins_ventas_bef before insert on ventas 
+for each row begin 
+update productos set cantidad = cantidad + new.cantidad_kilos where id_producto=new.fk_producto;
+if (((new.dia>=25) and (new.dia<=30)) or ((new.dia>=10) and (new.dia<=15))) then 
+update productos set precio_kilo = (((new.precio_kilos * 20)/100) + new.precio_kilos) where id_producto=new.fk_producto;
+end if;
+insert into auditoria values(1,'ventas',current_user(),current_date(),current_time());
+set new.id_venta = ((select count(id_venta) from ventas) + 1);
+end $$
+delimiter ;
+
+delimiter $$
+create trigger ins_productos_bef before insert on productos 
+for each row begin 
+if ((new.cantidad) >= 1) then 
+set new.estado_producto = 'disponible';
+else
+set new.estado_producto = 'agotado';
+end if;
+set new.id_producto = ((select count(id_producto) from productos) + 1);
+end $$
+delimiter ;
+
+delimiter $$
+create trigger upd_productos_bef before update on productos 
+for each row begin 
+if ((new.cantidad) >= 1) then 
+set new.estado_producto = 'disponible';
+end if;
+if (old.precio_kilo != new.precio_kilo) then
+insert into respaldo_producto values(current_date(),current_user(),old.precio_kilo,new.precio_kilo,new.nombre_producto);
+end if;
+end $$
+delimiter ;
+
+delimiter $$
+create trigger ins_contenidos_bef before insert on contenidos 
+for each row begin 
+declare msg varchar(255);
+if (new.cantidad_kilos <= (select cantidad from productos where id_producto = new.fk_producto)) then 
+set new.id_contenido = ((select count(id_contenido) from contenidos) + 1);
+set new.precio_cantidad = (new.cantidad_kilos * (select precio_kilo from productos where id_producto = new.fk_producto));
+update pedidos set total_pedido = total_pedido + new.precio_cantidad where id_pedido = new.fk_pedido;
+else 
+set msg = concat('la cantidad de ',(select nombre_producto from productos where id_producto = new.fk_producto),' en kilos que usted solicita no se encuentra disponible actualmente hay: ',(select cantidad from productos where id_producto = new.fk_producto),' kilo(s) disponibles');
+signal sqlstate '42000' set message_text = msg;
+end if;
+end $$
+delimiter ;
+
+delimiter $$
+create trigger upd_contenidos_aft after update on contenidos 
+for each row begin 
+if (new.estado_contenido='d') then 
+update productos set cantidad = cantidad - (new.cantidad_kilos) where id_producto=new.fk_producto;
+end if;
+end $$
+delimiter ;
+
+delimiter $$
+create trigger ins_pedidos_bef before insert on pedidos 
+for each row begin 
+set new.id_pedido = ((select count(id_pedido) from pedidos) + 1);
+end $$
+delimiter ;
+
+delimiter $$
+create trigger upd_pedidos_aft after update on pedidos 
+for each row begin 
+if (new.estado_pedido='proceso') then 
+update contenidos set estado_contenido = 'p' where fk_pedido = new.id_pedido; 
+else
+if (new.estado_pedido = 'despachado') then 
+update contenidos set estado_contenido = 'd' where fk_pedido = new.id_pedido; 
+else
+if (new.estado_pedido = 'cancelado') then 
+delete from contenidos where fk_pedido = new.id_pedido;
+end if;
+end if;
+end if;
+end $$
+delimiter ;
+
+delimiter $$
+create trigger ins_comanda_bef before insert on comanda 
+for each row begin 
+set new.id_comanda = ((select count(id_comanda) from comanda) + 1);
+end $$
+delimiter ;
+
+delimiter $$
+create trigger ins_batallones_bef before insert on batallones 
+for each row begin 
+set new.id_batallon = ((select count(id_batallon) from batallones) + 1);
+end $$
+delimiter ;
+
+delimiter $$
+create trigger ins_brigadas_bef before insert on brigadas 
+for each row begin 
+set new.id_brigada = ((select count(id_brigada) from brigadas) + 1);
+end $$
+delimiter ;
+
+delimiter $$
+create trigger ins_divisiones_bef before insert on divisiones 
+for each row begin 
+set new.id_division = ((select count(id_division) from divisiones) + 1);
+end $$
+delimiter ;
+
+
+insert into productos values(1,'abichuela',1000,0,'agotado');
+insert into productos values(2,'alberja',3000,0,'agotado');
+insert into productos values(3,'pimenton',2000,0,'agotado');
+
+insert into provedores values('darian',null,'cabrera',null,1117530898,'verduras');
+
+insert into tipoaccion values(1,'insert');
+insert into tipoaccion values(2,'delete');
+insert into tipoaccion values(3,'update');
+
+
+insert into ventas values(null,1,1117530898,14,2,2018,3,2000);
+insert into ventas values(null,2,1117530898,14,2,2018,3,5000);
+insert into ventas values(null,3,1117530898,14,2,2018,5,1500);
+insert into ventas values(null,3,1117530898,26,2,2018,5,7000);
+insert into ventas values(null,3,1117530898,14,3,2018,3,1000);
+insert into ventas values(null,3,1117530898,15,3,2018,3,10000);
+insert into ventas values(null,3,1117530898,15,3,2018,5,100);
+insert into ventas values(null,3,1117530898,15,3,2018,4,500);
+
+
+insert into pedidos values(1,null,1,10,2018,0,'indefinido');
+
+insert into contenidos values(null,1,2,0,1,'i');
+insert into contenidos values(null,1,2,0,2,'i');
+insert into contenidos values(null,1,3,0,3,'i');
+insert into contenidos values(null,1,2,0,4,'i');
+
+
+
+update pedidos set estado_pedido = 'despachado' where id_pedido=1; 
+
+insert into comandantes values(1117540898,'Yojan','Darian','Cabrera','Castilla','Capitan',320269);
+insert into batallones values(null,'livorio',null);
+insert into comanda values(null,1117540898,1,'2018-06-12');
+
+
+select nombre_batallon,primer_nombre_comandante,primer_apellido_comandante,cargo_ejercito,dia,mes,año,total_pedido,estado_pedido
+from
+pedidos left join 
+comanda on fk_comanda_id=id_comanda 
+left join batallones on fk_batallon=id_batallon 
+left join comandantes on fk_comandante=cedula;
+
+select nombre_producto,precio_kilo,cantidad_kilos,precio_cantidad 
+from contenidos 
+left join productos on fk_producto=id_producto where fk_pedido=1;
+
+drop function if exists detallepedido;
+delimiter $$
+create function detallepedido(pedido int) returns int(11) 
+begin
+return (select total_pedido from pedidos where id_pedido=pedido);
+end $$
+delimiter ;
+
+
+
+
