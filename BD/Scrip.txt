@@ -1,47 +1,3 @@
-creacion de usuarios:
-
-administrador: 
-
-create user administrador@localhost identified by 'admin';
-grant all privileges on dvicente.* to administrador@localhost;
-grant create user on *.* to administrador@localhost;
-grant process, trigger, grant option on *.* to administrador@localhost;
-grant reload, create routine on *.* to administrador@localhost;
-
-gerente: 
-
-create user gerente@localhost identified by 'geren';
-grant select, insert, update on dvicente.provedores to gerente@localhost;
-grant select, insert, update on dvicente.telefonos to gerente@localhost;
-grant select, insert, update on dvicente.ventas to gerente@localhost;
-grant select, insert, update on dvicente.productos to gerente@localhost;
-grant select, insert, update on dvicente.contenidos to gerente@localhost;
-grant select, insert, update on dvicente.pedidos to gerente@localhost;
-grant select, insert, update on dvicente.comandantes to gerente@localhost;
-grant select, insert, update on dvicente.comanda to gerente@localhost;
-
-
-jefebodega: 
-
-create user jefebodega@localhost identified by 'trabaja24';
-grant select on dvicente.productos to jefebodega@localhost;
-grant select on dvicente.pedidos to jefebodega@localhost;
-grant select on dvicente.contenidos to jefebodega@localhost;
-
-
-cliente: 
-
-create user cliente@localhost identified by 'clien';
-grant select on dvicente.productos to cliente@localhost;
-
-flush privileges;
-
-entrar con usuarios:
-ruta:
-C:\Program Files\MySQL\MySQL Server 5.7\bin>
-mysql.exe -u administrador -p
-
-
 create database dvicente;
 use dvicente;
 
@@ -53,6 +9,7 @@ segundo_apellido_representante varchar(40),
 nit_empresa int not null,
 nombre_empresa varchar(40)
 );
+
 
 create table telefonos (
 telefono int,
@@ -174,6 +131,13 @@ cargo varchar(40),
 salario int
 );
 
+create table usuarios (
+id_usuario int,
+usuario varchar(20),
+contraseña varchar(20),
+tipo_usuario varchar(20)
+);
+
 alter table provedores add constraint pk_provedores primary key (nit_empresa);
 alter table ventas add constraint pk_ventas_compuesta primary key (id_venta,fk_producto,fk_provedor);
 alter table productos add constraint pk_productos primary key (id_producto);
@@ -210,6 +174,8 @@ alter table auditoria add constraint fk_tipoaccion_auditoria foreign key (fk_tip
 
 creacion de triggers:
 
+
+///------- este trigger no lo agregue---//
 delimiter $$
 create trigger ins_ventas_bef before insert on ventas 
 for each row begin 
@@ -217,8 +183,15 @@ update productos set cantidad = cantidad + new.cantidad_kilos where id_producto=
 if (((new.dia>=25) and (new.dia<=30)) or ((new.dia>=10) and (new.dia<=15))) then 
 update productos set precio_kilo = (((new.precio_kilos * 20)/100) + new.precio_kilos) where id_producto=new.fk_producto;
 end if;
-insert into auditoria values(1,'ventas',current_user(),current_date(),current_time());
 set new.id_venta = ((select count(id_venta) from ventas) + 1);
+end $$
+delimiter ;
+///----------------------------------------//
+
+delimiter $$
+create trigger ins_audi_bef before insert on auditoria 
+for each row begin 
+set new.id_auditoria = ((select count(id_auditoria) from auditoria) + 1);
 end $$
 delimiter ;
 
@@ -326,15 +299,49 @@ delimiter ;
 insert into productos values(1,'abichuela',1000,0,'agotado');
 insert into productos values(2,'alberja',3000,0,'agotado');
 insert into productos values(3,'pimenton',2000,0,'agotado');
+insert into productos values(4,'banano',2000,0,'agotado');
+insert into productos values(5,'pepeino',1000,0,'agotado');
+insert into productos values(6,'cachue',200,0,'agotado');
+insert into productos values(7,'lechuga',500,0,'agotado');
+insert into productos values(8,'viniel',6000,0,'agotado');
+insert into productos values(9,'auyama',9000,0,'agotado');
+insert into productos values(10,'aguacate',2000,0,'agotado');
 
 insert into provedores values('darian',null,'cabrera',null,1117530898,'verduras');
+insert into ventas values(1,1,1117530898,14,2,2018,3,2000);
+insert into comanda values(null,1117540898,1,'2018-06-12');
+insert into comandantes values(1117540898,'Yojan','Darian','Cabrera','Castilla','Capitan',320269);
+insert into batallones values(null,'livorio',null);
+
+insert into empleado values(1117877,'Diego','','garcia','','gerente',1900999);
+insert into empleado values(11178772,'Gonzalo','','vega','','ampacador',10999);
+insert into empleado values(11178773,'Andres','','diarte','','gerente',1900999);
+insert into empleado values(11178774,'Angela','','Veneses','','secretaria',00999);
+insert into empleado values(11178775,'Enilcen','','Castilla','','contratista',1900999);
+
+insert into usuarios values(1,'comandante1','12345','cliente');
+insert into usuarios values(2,'gerente1','12345','gerente');
+
 
 insert into tipoaccion values(1,'insert');
 insert into tipoaccion values(2,'delete');
 insert into tipoaccion values(3,'update');
 
+insert into pedidos values(1,1117540898,1,1,1,10,2018,0,'indefinido');
 
-insert into ventas values(null,1,1117530898,14,2,2018,3,2000);
+insert into comandantes values(1117540898,'Yojan','Darian','Cabrera','Castilla','Capitan',320269);
+insert into batallones values(null,'livorio',null);
+insert into comanda values(null,1117540898,1,'2018-06-12');
+
+
+
+
+
+
+-------------------- esto no lo agrege-------------------------
+
+
+insert into ventas values(1,1,1117530898,14,2,2018,3,2000);
 insert into ventas values(null,2,1117530898,14,2,2018,3,5000);
 insert into ventas values(null,3,1117530898,14,2,2018,5,1500);
 insert into ventas values(null,3,1117530898,26,2,2018,5,7000);
@@ -342,9 +349,6 @@ insert into ventas values(null,3,1117530898,14,3,2018,3,1000);
 insert into ventas values(null,3,1117530898,15,3,2018,3,10000);
 insert into ventas values(null,3,1117530898,15,3,2018,5,100);
 insert into ventas values(null,3,1117530898,15,3,2018,4,500);
-
-
-insert into pedidos values(1,null,1,10,2018,0,'indefinido');
 
 insert into contenidos values(null,1,2,0,1,'i');
 insert into contenidos values(null,1,2,0,2,'i');
@@ -355,9 +359,6 @@ insert into contenidos values(null,1,2,0,4,'i');
 
 update pedidos set estado_pedido = 'despachado' where id_pedido=1; 
 
-insert into comandantes values(1117540898,'Yojan','Darian','Cabrera','Castilla','Capitan',320269);
-insert into batallones values(null,'livorio',null);
-insert into comanda values(null,1117540898,1,'2018-06-12');
 
 
 select nombre_batallon,primer_nombre_comandante,primer_apellido_comandante,cargo_ejercito,dia,mes,año,total_pedido,estado_pedido

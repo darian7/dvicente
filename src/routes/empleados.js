@@ -12,7 +12,7 @@ router.get('/empleados', (req, res) => {
     });
 });
 
-router.get('/empleado/:id', (req, res) => {
+router.get('/empleados/:id', (req, res) => {
     const { id } = req.params;
     mysqlconecction.query('select * from empleado where cedula_empleado=?', [id], (err, rows, fields) => {
         if (!err) {
